@@ -1,0 +1,41 @@
+name: Build ADB GUI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Download platform-tools
+        run: |
+          curl -Lo platform-tools.zip https://dl.google.com/android/repository/platform-tools-latest-windows.zip
+          powershell -Command "Expand-Archive platform-tools.zip -DestinationPath platform-tools"
+
+      - name: Build exe with logo
+        run: |
+          pyinstaller --onefile --noconsole adb_gui.py ^
+          --icon=logo.ico ^
+          --add-data "platform-tools;platform-tools" ^
+          --name=ADB_Manager_GUI
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v3
+        with:
+          name: ADB_Manager_GUI
+          path: dist/ADB_Manager_GUI.exe
+          
