@@ -33,7 +33,8 @@ jobs:
         run: choco install nsis -y
 
       - name: Create installer
-        run: makensis installer.nsi
+        run: |
+          "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
