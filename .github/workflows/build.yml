@@ -1,4 +1,4 @@
-name: Build ADB GUI
+name: Build ADB GUI Installer
 
 on:
   push:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -33,9 +33,35 @@ jobs:
           --add-data "platform-tools;platform-tools" ^
           --name=ADB_Manager_GUI
 
-      - name: Upload exe
-        uses: actions/upload-artifact@v3
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      - name: Create Inno Setup Script
+        run: |
+          echo [Setup] > installer.iss
+          echo AppName=ADB Manager GUI >> installer.iss
+          echo AppVersion=1.0 >> installer.iss
+          echo DefaultDirName={pf}\\ADB_Manager_GUI >> installer.iss
+          echo DefaultGroupName=ADB Manager GUI >> installer.iss
+          echo UninstallDisplayIcon={app}\\ADB_Manager_GUI.exe >> installer.iss
+          echo OutputDir=dist >> installer.iss
+          echo OutputBaseFilename=ADB_Manager_GUI_Installer >> installer.iss
+          echo Compression=lzma >> installer.iss
+          echo SolidCompression=yes >> installer.iss
+          echo [Files] >> installer.iss
+          echo Source: "dist\\ADB_Manager_GUI.exe"; DestDir: "{app}"; Flags: ignoreversion >> installer.iss
+          echo Source: "platform-tools\\*"; DestDir: "{app}\\platform-tools"; Flags: recursesubdirs ignoreversion >> installer.iss
+          echo [Icons] >> installer.iss
+          echo Name: "{group}\\ADB Manager GUI"; Filename: "{app}\\ADB_Manager_GUI.exe" >> installer.iss
+          echo Name: "{commondesktop}\\ADB Manager GUI"; Filename: "{app}\\ADB_Manager_GUI.exe" >> installer.iss
+          echo Name: "{group}\\Uninstall ADB Manager GUI"; Filename: "{uninstallexe}" >> installer.iss
+
+      - name: Build Installer
+        run: iscc installer.iss
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
         with:
-          name: ADB_Manager_GUI
-          path: dist/ADB_Manager_GUI.exe
+          name: ADB_Manager_GUI_Installer
+          path: dist/ADB_Manager_GUI_Installer.exe
           
